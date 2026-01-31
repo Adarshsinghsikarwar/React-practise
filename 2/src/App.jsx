@@ -12,7 +12,7 @@ const App = () => {
         ))}
       </div>
       <button
-        onClick={() => setval((prev) => prev.filter((ele, id) => ele % 2))}
+        onClick={() => setval([...val, 8])}
         className="w-fit px-10 py-1 border text-3xl text-[#c26565] bg-amber-200"
       >
         Click
