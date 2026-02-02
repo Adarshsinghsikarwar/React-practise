@@ -4,7 +4,7 @@ const Cards = (props) => {
   const { songs, addFavorite } = props;
   console.log(songs);
   return (
-    <div className="w-[100%]  p-6 flex flex-wrap justify-between gap-y-15 ">
+    <div className="w-full p-6 flex flex-wrap justify-between gap-y-15 ">
       {songs.map((ele, idx) => (
         <div key={idx} className="h-[40vh] w-[22%] bg-blue-300 relative rounded-3xl shrink-0">
           <img
