@@ -1,22 +1,15 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
 
 const App = () => {
-  const [val, setVal] = useState({ name: "" });
-  console.log(val);
-
-  const submitForm = (event) => {
-    event.preventDefault();
-  };
+  const { register, handleSubmit } = useForm();
 
   return (
-    <form onSubmit={submitForm} className="h-screen w-full bg-blue-100 p-10">
-      <input
-        value={val.name}
-        onChange={(event) => setVal({ ...val, name: event.target.value })}
-        placeholder="name"
-        type="text"
-        className="border-b-4"
-      />
+    <form
+      onSubmit={handleSubmit((data) => console.log(data.name))}
+      className="h-screen w-full bg-blue-100 p-10"
+    >
+      <input {...register("name")} placeholder="name" type="text" />
       <input type="submit" className="px-3 py-1 bg-red-200 text-2xl" />
     </form>
   );
