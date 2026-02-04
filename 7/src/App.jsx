@@ -7,7 +7,7 @@ const App = () => {
   useEffect(() => {
     console.log("Component is created");
     return () => console.log("Component is delete");
-  });
+  }, []);
   const [products, setproducts] = useState([]);
   const getproducts = () => {
     const api = "https://fakestoreapi.com/products";
