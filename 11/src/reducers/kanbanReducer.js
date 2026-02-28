@@ -1,5 +1,29 @@
 export const kanbanReducer = (state, action) => {
+  const { past, present, future } = state;
+
   switch (action.type) {
+    case "UNDO": {
+      if (past.length === 0) return state;
+      const previous = past[past.length - 1];
+      const newPast = past.slice(0, past.length - 1);
+      return {
+        past: newPast,
+        present: previous,
+        future: [present, ...future],
+      };
+    }
+
+    case "REDO": {
+      if (future.length === 0) return state;
+      const next = future[0];
+      const newFuture = future.slice(1);
+      return {
+        past: [...past, present],
+        present: next,
+        future: newFuture,
+      };
+    }
+
     case "MOVE_TASK": {
       const {
         sourceColumnId,
@@ -9,66 +33,97 @@ export const kanbanReducer = (state, action) => {
         taskId,
       } = action.payload;
 
-      const sourceCol = state.columns[sourceColumnId];
-      const destCol = state.columns[destinationColumnId];
-
+      const sourceCol = present.columns[sourceColumnId];
+      const destCol = present.columns[destinationColumnId];
       const newSourceTaskIds = [...sourceCol.taskIds];
 
+      let newPresent;
       if (sourceColumnId === destinationColumnId) {
-        // CASE: Moving within the same column
-        newSourceTaskIds.splice(sourceIndex, 1); // remove from old pos
-        newSourceTaskIds.splice(destinationIndex, 0, taskId); // insert at new pos
-
-        return {
-          ...state,
+        newSourceTaskIds.splice(sourceIndex, 1);
+        newSourceTaskIds.splice(destinationIndex, 0, taskId);
+        newPresent = {
+          ...present,
           columns: {
-            ...state.columns,
+            ...present.columns,
             [sourceColumnId]: {
               ...sourceCol,
               taskIds: newSourceTaskIds,
             },
           },
         };
+      } else {
+        const newDestTaskIds = [...destCol.taskIds];
+        newSourceTaskIds.splice(sourceIndex, 1);
+        newDestTaskIds.splice(destinationIndex, 0, taskId);
+        newPresent = {
+          ...present,
+          columns: {
+            ...present.columns,
+            [sourceColumnId]: {
+              ...sourceCol,
+              taskIds: newSourceTaskIds,
+            },
+            [destinationColumnId]: {
+              ...destCol,
+              taskIds: newDestTaskIds,
+            },
+          },
+        };
       }
 
-      // CASE: Moving between different columns
-      const newDestTaskIds = [...destCol.taskIds];
-      newSourceTaskIds.splice(sourceIndex, 1); // remove from source
-      newDestTaskIds.splice(destinationIndex, 0, taskId); // add to destination
-
       return {
-        ...state,
-        columns: {
-          ...state.columns,
-          [sourceColumnId]: {
-            ...sourceCol,
-            taskIds: newSourceTaskIds,
-          },
-          [destinationColumnId]: {
-            ...destCol,
-            taskIds: newDestTaskIds,
-          },
-        },
+        past: [...past, present],
+        present: newPresent,
+        future: [],
       };
     }
 
     case "ADD_COLUMN": {
       const { title } = action.payload;
       const newId = `column-${Date.now()}`;
+      const newColumn = { id: newId, title, taskIds: [] };
 
-      const newColumn = {
-        id: newId,
-        title: title,
-        taskIds: [],
+      const newPresent = {
+        ...present,
+        columns: {
+          ...present.columns,
+          [newId]: newColumn,
+        },
+        columnOrder: [...present.columnOrder, newId],
       };
 
       return {
-        ...state,
-        columns: {
-          ...state.columns,
-          [newId]: newColumn,
+        past: [...past, present],
+        present: newPresent,
+        future: [],
+      };
+    }
+
+    case "UPDATE_TASK": {
+      const { taskId, content } = action.payload;
+      const newPresent = {
+        ...present,
+        tasks: {
+          ...present.tasks,
+          [taskId]: {
+            ...present.tasks[taskId],
+            content,
+          },
         },
-        columnOrder: [...state.columnOrder, newId],
+      };
+
+      return {
+        past: [...past, present],
+        present: newPresent,
+        future: [],
+      };
+    }
+
+    case "SET_STRESS_DATA": {
+      return {
+        past: [],
+        present: action.payload,
+        future: [],
       };
     }
 
